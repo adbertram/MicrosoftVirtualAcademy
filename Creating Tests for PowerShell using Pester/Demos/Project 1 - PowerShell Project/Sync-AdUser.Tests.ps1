@@ -29,124 +29,120 @@ Import-Module "$PSScriptRoot\Module\AdUserSync.psm1" -Force
 $scriptFilePath = $MyInvocation.MyCommand.Path -replace '\.Tests\.ps1','.ps1' | Split-Path -Leaf
 $scriptFilePath = "$PSScriptRoot\$scriptFilePath"
 
-#region Start Tests
+describe 'Sync-AdUser - Failure Tests' {
 
-describe 'Sync-AdUser - missing CSV file' {
+    context 'When the CSV file is missing' {
 
-    ## Just need a single mock here because the script will exit quickly
-    mock 'Get-ActiveEmployee' {
-        throw 'could not be found'
-    }
-
-    it 'should throw an exception when the CSV file cannot be found' {
-        { & $scriptFilePath } | should throw 'could not be found'
-    }
-}
-
-describe 'Sync-AdUser - bad CSV data' {
-
-    ## Just need a single mock here because the script will exit quickly
-    mock 'Get-ActiveEmployee'
-    
-    it 'should throw an exception when there are no rows in the CSV file' {
-        { & $scriptFilePath } | should throw 'No employees found in CSV file'
-    }
-
-}
-
-describe 'Sync-AdUser - existing user tests' {
-
-    ## Have Get-ActiveEmployee send fake data so we can easily control it
-    mock 'Get-ActiveEmployee' {
-        $getActiveEmployeeOutput
-    }
-
-    mock 'Test-ADUserExists' {
-        $true
-    }
-
-    ## Mocking Write-Warning here just because we need to assert it
-    mock 'Write-Warning'
-
-    ## This has to be mocked because I don't want the script to do anything else after the user test.
-    mock 'Get-InactiveEmployee'
-
-    ## No need to see the output here since we're just asserting a command is called.
-    $null = & $scriptFilePath
-
-    it 'when a user already exists, it should write a warning to the console' {
-        $assMParams = @{
-            CommandName = 'Write-Warning'
-            Times = 5 ## once for each user
-            Exactly = $true
-            ParameterFilter = {$Message -match 'Cannot create account' }
+        ## Just need a single mock here because the script will exit quickly
+        mock 'Get-ActiveEmployee' {
+            throw 'could not be found'
         }
-        Assert-MockCalled @assMParams
+
+        it 'should throw an exception when the CSV file cannot be found' {
+            { & $scriptFilePath } | should throw 'could not be found'
+        }
     }
 
-}
+    context 'When the CSV has bad data' {
 
-describe 'Sync-AdUser - OU tests' {
-
-    ## Have Get-ActiveEmployee send fake data so we can easily control it
-    mock 'Get-ActiveEmployee' {
-        $getActiveEmployeeOutput
-    }
-
-    ## This must be here to get past this call in the function. We're not testing users right now.
-    mock 'Test-ADUserExists' {
-        $false
-    }
-
-    mock 'Test-ADOrganizationalUnitExists' {
-        $false
-    }
-
-    mock 'Get-InactiveEmployee'
-
-    it 'when an OU does not exist, it should throw an exception' {
-
-        ## No assertion for throw here. Since we're catching the exceptions in the foreach loop and returning a non-terminating error
-        $null = & $scriptFilePath -ErrorAction SilentlyContinue -ErrorVariable err
-        $err | should belike 'Unable to find the OU*'
-    }
-
-}
-
-describe 'Sync-AdUser - group tests' {
-
-    mock 'Get-ActiveEmployee' {
-        $getActiveEmployeeOutput
-    }
-
-    mock 'Test-ADUserExists' {
-        $false
-    }
-
-    mock 'Test-ADOrganizationalUnitExists' {
-        $true
-    }
-
-    mock 'New-CompanyAdUser'
-
-    mock 'Get-AdUserDefaultPassword' {
-       (ConvertTo-SecureString -String 'foo' -AsPlainText -Force)
-   }
-
-    mock 'Test-AdGroupExists' {
-        $false
-    }
-
-    mock 'Get-InactiveEmployee'
-
-    it 'when a group does not exist, it should throw an exception' {
+        ## Just need a single mock here because the script will exit quickly
+        mock 'Get-ActiveEmployee'
         
-        ## No assertion for throw here. Since we're catching the exceptions in the foreach loop and returning a non-terminating error
-        $null = & $scriptFilePath -ErrorAction SilentlyContinue -ErrorVariable err
-        $err | should belike 'Unable to find the group*'
+        it 'should throw an exception when there are no rows in the CSV file' {
+            { & $scriptFilePath } | should throw 'No employees found in CSV file'
+        }
+
     }
 
+    context 'When a user already exists' {
+        ## Have Get-ActiveEmployee send fake data so we can easily control it
+        mock 'Get-ActiveEmployee' {
+            $getActiveEmployeeOutput
+        }
+
+        mock 'Test-ADUserExists' {
+            $true
+        }
+
+        ## Mocking Write-Warning here just because we need to assert it
+        mock 'Write-Warning'
+
+        ## This has to be mocked because I don't want the script to do anything else after the user test.
+        mock 'Get-InactiveEmployee'
+
+        ## No need to see the output here since we're just asserting a command is called.
+        $null = & $scriptFilePath
+
+        it 'when a user already exists, it should write a warning to the console' {
+            $assMParams = @{
+                CommandName = 'Write-Warning'
+                Times = 5 ## once for each user
+                Exactly = $true
+                ParameterFilter = {$Message -match 'Cannot create account' }
+            }
+            Assert-MockCalled @assMParams
+        }
+    }
+
+    context 'When an OU does not exist' {
+        ## Have Get-ActiveEmployee send fake data so we can easily control it
+        mock 'Get-ActiveEmployee' {
+            $getActiveEmployeeOutput
+        }
+
+        ## This must be here to get past this call in the function. We're not testing users right now.
+        mock 'Test-ADUserExists' {
+            $false
+        }
+
+        mock 'Test-ADOrganizationalUnitExists' {
+            $false
+        }
+
+        mock 'Get-InactiveEmployee'
+
+        it 'when an OU does not exist, it should throw an exception' {
+
+            ## No assertion for throw here. Since we're catching the exceptions in the foreach loop and returning a non-terminating error
+            $null = & $scriptFilePath -ErrorAction SilentlyContinue -ErrorVariable err
+            $err | should belike 'Unable to find the OU*'
+        }
+    }
+
+    context 'When a group does not exist' {
+        mock 'Get-ActiveEmployee' {
+            $getActiveEmployeeOutput
+        }
+
+        mock 'Test-ADUserExists' {
+            $false
+        }
+
+        mock 'Test-ADOrganizationalUnitExists' {
+            $true
+        }
+
+        mock 'New-CompanyAdUser'
+
+        mock 'Get-AdUserDefaultPassword' {
+            (ConvertTo-SecureString -String 'foo' -AsPlainText -Force)
+        }
+
+        mock 'Test-AdGroupExists' {
+            $false
+        }
+
+        mock 'Get-InactiveEmployee'
+
+        it ' it should throw an exception' {
+            
+            ## No assertion for throw here. Since we're catching the exceptions in the foreach loop and returning a non-terminating error
+            $null = & $scriptFilePath -ErrorAction SilentlyContinue -ErrorVariable err
+            $err | should belike 'Unable to find the group*'
+        }
+    }
 }
+
 
 describe 'Sync-AdUser - user account creation' {
 
@@ -391,5 +387,3 @@ describe 'Sync-AdUser - inactive employee tests' {
     }
     
 }
-
-#endregion

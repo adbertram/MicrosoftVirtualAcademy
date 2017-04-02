@@ -14,103 +14,108 @@ This script:
  - It also disables any user NOT in the CSV
 #>
 
-$domainDn = (Get-ADDomain).DistinguishedName
+## Gather up all of the necessary prereq information
+	$domainDn = (Get-ADDomain -Server DC).DistinguishedName
 
-$artifactsFolder = "$PSScriptRoot\Artifacts"
+	$artifactsFolder = "$PSScriptRoot\Artifacts"
 
-## The default password for account was saved on the file system previously
-$defaultPasswordXmlFile = "$artifactsFolder\DefaultUserPassword.xml"
-## To save a new password, do this: Get-Credential -UserName 'DOESNOTMATTER' | Export-CliXml $defaultPasswordXmlFile
-Write-Verbose -Message "Reading default password from [$("$artifactsFolder\DefaultUserPassword.xml")]..."
-$defaultCredential = Import-CliXml -Path $defaultPasswordXmlFile
-$defaultPassword = $defaultCredential.GetNetworkCredential().Password
-$defaultPassword = (ConvertTo-SecureString $defaultPassword -AsPlainText -Force)
+	## The default password for account was saved on the file system previously
+	$defaultPasswordXmlFile = "$artifactsFolder\DefaultUserPassword.xml"
+	## To save a new password, do this: Get-Credential -UserName 'DOESNOTMATTER' | Export-CliXml $defaultPasswordXmlFile
+	Write-Verbose -Message "Reading default password from [$("$artifactsFolder\DefaultUserPassword.xml")]..."
+	write-host $defaultPasswordXmlFile
+	$defaultCredential = Import-CliXml -Path $defaultPasswordXmlFile
+	$defaultPassword = $defaultCredential.GetNetworkCredential().Password
+	$defaultPassword = (ConvertTo-SecureString $defaultPassword -AsPlainText -Force)
 
 ## Read the CSV
-$employeesCsvPath = "$artifactsFolder\Employees.csv"
-if (-not (Test-Path -Path $employeesCsvPath)) {
-	throw "The employee CSV file at [$($employeesCsvPath)] could not be found."
-} else {
-	Write-Verbose -Message "The employee CSV file at [$($employeesCsvPath)] exists."
-}
+	$employeesCsvPath = "$artifactsFolder\Employees.csv"
+	if (-not (Test-Path -Path $employeesCsvPath)) {
+		throw "The employee CSV file at [$($employeesCsvPath)] could not be found."
+	} else {
+		Write-Verbose -Message "The employee CSV file at [$($employeesCsvPath)] exists."
+	}
 
-$employees = Import-Csv -Path $employeesCsvPath
+	$employees = Import-Csv -Path $employeesCsvPath
 
-if ($employees) { ## Checking to see if there was actually any employees in the CSV
-	foreach ($employee in $employees)
-	{
-		try
+## Begin processing each CSV row and checking AD
+	if ($employees) { ## Checking to see if there was actually any employees in the CSV
+		foreach ($employee in $employees)
 		{
-			## Our standard username pattern is <FirstInitial><LastName>
-			$firstInitial = $employee.FirstName.SubString(0,1)
-			$userName = '{0}{1}' -f $firstInitial,$employee.LastName
-			
-			## Check to see if the username is available
-			Write-Verbose -Message "Checking if [$($userName)] is available"
-			if (Get-ADUser -Filter "Name -eq '$userName'")
+			try
 			{
-				Write-Warning -Message "The username [$($userName)] is not available. Cannot create account."
-			}
-			else
-			{
-				Write-Verbose -Message "The username [$($userName)] is available."
-				$newUserParams = @{
-					UserPrincipalName = $userName
-					Name = $userName
-					GivenName = $employee.FirstName
-					Surname = $employee.LastName
-					Title = $employee.Title
-					Department = $employee.Department
-					SamAccountName = $userName
-					AccountPassword = $defaultPassword
-					Enabled = $true
-					ChangePasswordAtLogon = $true
-				}
+				## Our standard username pattern is <FirstInitial><LastName>
+				$firstInitial = $employee.FirstName.SubString(0,1)
+				$userName = '{0}{1}' -f $firstInitial,$employee.LastName
 				
-				## Add users to specific OUs depending on department
+				## Check to see if the username is available
+				Write-Verbose -Message "Checking if [$($userName)] is available"
+				if (Get-ADUser -Server DC -Filter "Name -eq '$userName'")
+				{
+					Write-Warning -Message "The username [$($userName)] is not available. Cannot create account."
+				}
+				else
+				{
+					Write-Verbose -Message "The username [$($userName)] is available."
+					$newUserParams = @{
+						UserPrincipalName = $userName
+						Name = $userName
+						GivenName = $employee.FirstName
+						Surname = $employee.LastName
+						Title = $employee.Title
+						Department = $employee.Department
+						SamAccountName = $userName
+						AccountPassword = $defaultPassword
+						Enabled = $true
+						ChangePasswordAtLogon = $true
+						Server = 'DC'
+					}
+					
+					## Add users to specific OUs depending on department
 
-				## Does the departmental OU even exist yet?
-				$departmentOuPath = "OU=$($employee.Department),$domainDn"
-				if (-not (Get-ADOrganizationalUnit -Filter "DistinguishedName -eq '$departmentOuPath'")) {
-					## if not, throw an error
-					throw "Unable to find the OU [$($departmentOuPath)]."
-				} else {
-					Write-Verbose -Message "Adding [$($userName)] to the OU [$($departmentOuPath)]..."
-					$newUserParams.Path = $departmentOuPath
+					## Does the departmental OU even exist yet?
+					$departmentOuPath = "OU=$($employee.Department),$domainDn"
+					if (-not (Get-ADOrganizationalUnit -Server DC -Filter "DistinguishedName -eq '$departmentOuPath'")) {
+						## if not, throw an error
+						throw "Unable to find the OU [$($departmentOuPath)]."
+					} else {
+						Write-Verbose -Message "Adding [$($userName)] to the OU [$($departmentOuPath)]..."
+						$newUserParams.Path = $departmentOuPath
+					}
+
+					## Create the user account with the details from the CSV
+					Write-Verbose -Message "Creating the new user account [$($userName)]..."
+					New-AdUser @newUserParams
 				}
 
-				## Create the user account with the details from the CSV
-				Write-Verbose -Message "Creating the new user account [$($userName)]..."
-				New-AdUser @newUserParams
-			}
+				## Adding to department group
 
-			## Adding to department group
-
-			## Check to see if the group exists
-			if (-not (Get-ADGroup -Filter "Name -eq '$($employee.Department)'")) {
-				throw "Unable to find the group [$($employee.Department)]"
-			} else {
-				## If so, check to see if the user is already a member
-				$groupMembers = (Get-ADGroupMember -Identity $employee.Department).Name
-				if (-not ($userName -in $groupMembers)) {
-					## Add the username to the department group
-					Write-Verbose -Message "Adding [$($userName)] to the group [$($employee.Department)]"
-					Add-ADGroupMember -Identity $employee.Department -Members $userName
+				## Check to see if the group exists
+				if (-not (Get-ADGroup -Server DC -Filter "Name -eq '$($employee.Department)'")) {
+					throw "Unable to find the group [$($employee.Department)]"
 				} else {
-					Write-Verbose -Message "[$($userName)] is already a member of [$($employee.Department)]"
+					## If so, check to see if the user is already a member
+					$groupMembers = (Get-ADGroupMember -Server DC -Identity $employee.Department).Name
+					if (-not ($userName -in $groupMembers)) {
+						## Add the username to the department group
+						Write-Verbose -Message "Adding [$($userName)] to the group [$($employee.Department)]"
+						Add-ADGroupMember -Server DC -Identity $employee.Department -Members $userName
+					} else {
+						Write-Verbose -Message "[$($userName)] is already a member of [$($employee.Department)]"
+					}
 				}
+			} catch {
+				Write-Error $_.Exception.Message
 			}
-		} catch {
-			Write-Error $_.Exception.Message
 		}
 	}
-}
-else
-{
-	Write-Warning "No records found in the file [$($employeesCsvPath)]"	
-}
+	else
+	{
+		Write-Warning "No records found in the file [$($employeesCsvPath)]"	
+	}
 
-$nonEmployeeAdUsers = $adUsers.where({ $_.samAccountName -notin $employeeUserNames })
-foreach ($emp in $nonEmployeeAdUsers) {
-	$emp | Disable-AdAccount
-}
+## Disable any accounts in AD that are not in this CSV
+	$nonEmployeeAdUsers = $adUsers.where({ $_.samAccountName -notin $employeeUserNames })
+	foreach ($emp in $nonEmployeeAdUsers) {
+		$emp | Disable-AdAccount -Server DC
+	}

@@ -7,5 +7,5 @@ foreach ($emp in $csvEmployees) {
     $firstInitial = $emp.FirstName.SubString(0,1)
     $userName = '{0}{1}' -f $firstInitial,$emp.LastName
 			
-    Get-AdUser -Filter "samAccountName -eq '$userName'" | Remove-AdUser -Confirm:$false
+    Get-AdUser -Server DC -Filter "samAccountName -eq '$userName'" | Remove-AdUser -Server DC -Confirm:$false
 }

@@ -35,7 +35,7 @@ InModuleScope 'AdUserSync' {
                 Exactly = $true
                 Scope = 'It'
                 ParameterFilter = { 
-                    $Path -eq 'C:\DropBox\GitRepos\Session-Content\Live Talks\PowerShell Summit 2017\Unit Testing A-Z\Demos\Project\Artifacts\DefaultUserPassword.xml' 
+                    $Path -eq 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos\Project 1 - PowerShell Project\Artifacts\DefaultUserPassword.xml' 
                 }
             }
             Assert-MockCalled @assMParams
@@ -142,7 +142,7 @@ InModuleScope 'AdUserSync' {
                 Exactly = $true
                 Scope = 'It'
                 ParameterFilter = { 
-                    $Path -eq 'C:\DropBox\GitRepos\Session-Content\Live Talks\PowerShell Summit 2017\Unit Testing A-Z\Demos\Project\Artifacts\Employees.csv' 
+                    $Path -eq 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos\Project 1 - PowerShell Project\Artifacts\Employees.csv' 
                 }
             }
             Assert-MockCalled @assMParams
@@ -246,16 +246,16 @@ InModuleScope 'AdUserSync' {
     }
 
     describe 'Get-DepartmentOUPath' {
-    $result = Get-DepartmentOUPath -OUPath 'departmentHere'
+        $result = Get-DepartmentOUPath -OUPath 'departmentHere'
 
-    it 'returns a single string' {
-            @($result).Count | should be 1
-            $result | should beofType 'string'
-    } 
+        it 'returns a single string' {
+                @($result).Count | should be 1
+                $result | should beofType 'string'
+        } 
 
-    it 'returns the expected OU path' {
-            $result | should be 'OU=departmentHere,DC=mylab,DC=local'
-    }
+        it 'returns the expected OU path' {
+                $result | should be 'OU=departmentHere,DC=mylab,DC=local'
+        }
     }
 
     describe 'Test-AdUserExists' {

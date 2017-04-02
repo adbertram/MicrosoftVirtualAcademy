@@ -1,6 +1,6 @@
 ## Demo stuff
     return
-    $demoPath = 'C:\Dropbox\GitRepos\Session-Content\Live Talks\Pester MVA\Demos'
+    $demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
 
 ##############################################
 ## Installing Pester
@@ -174,7 +174,7 @@
         ## 2. Build tests for our "helper" functions in the module
         psedit "$demoPath\Project 1 - PowerShell Project\Module\AdUserSync.Tests.ps1"
 
-        ## 3. Build tests for how these functions are invoke in the script
+        ## 3. Build tests for how these functions are invoked in the script
         psedit "$demoPath\Project 1 - PowerShell Project\Sync-AdUser.Tests.ps1"
 
 
@@ -228,14 +228,14 @@ describe 'PowerShell Gallery Tests' {
     }
 
     it 'must pass Test-ModuleManifest validation' {
-        Test-ModuleManifest -Path "$moduleFolder\PSWebDeploy.psm1" -ErrorAction SilentlyContinue | should be $true
+        Test-ModuleManifest -Path $moduleManifestPath -ErrorAction SilentlyContinue | should be $true
     }
 
     it 'must have associated Pester tests' {
         Test-Path -Path "$moduleFolder\PSWebDeploy.Tests.ps1" | should be $true
     }
 
-    it 'must pass all default PSScriptAnalyzer rules' {
+    it 'must pass PSScriptAnalyzer rules' {
         Invoke-ScriptAnalyzer -Path "$moduleFolder\PSWebDeploy.psm1" -ExcludeRule 'PSUseDeclaredVarsMoreThanAssignments' | should benullorempty
     }
 }
@@ -261,6 +261,8 @@ start 'https://github.com/adbertram/TestDomainCreator'
 ## AppVeyor
 start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
 
+## Kick off the AppVeyor build --we'll come back to that.
+
 ## The DSC Configuration that AppVeyor will apply to our Azure VM
 psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
 
@@ -276,9 +278,23 @@ psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
     ## those groups should be there, the build will fail.
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
 
+    ## Commit the change and sync to Github
+    Push-Location -Path 'C:\Dropbox\GitRepos\TestDomainCreator'
+    git commit --message 'MVA - Change to fail test'
+    git add .
+    git push
+    Pop-Location
 
+    ## Check AppVeyor to confirm
+    start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
 
-## Make a change to the DSC script to make actual config and test out of sync. Build should fail.
+    ## Make a change to make tests pass and commit to Git
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
+    Push-Location -Path 'C:\Dropbox\GitRepos\TestDomainCreator'
+    git add .
+    git commit --message 'MVA - Change to succeed test'
+    git push
+    Pop-Location
 
-
-## Correct the change and make the build pass
+    ## Check AppVeyor to confirm
+    start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
