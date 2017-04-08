@@ -9,6 +9,7 @@
         Write-Output "I did the thing $Action!"
     }
 
+    ## Test with no mocking
     describe 'Start-ClusterTest' { 
 
         $result = Start-ClusterTest -Action 'Foo'
@@ -20,6 +21,7 @@
         
     }
 
+    ## Test with mocking. Test fails because the command has been "overwritten"
     describe 'Start-ClusterTest' { 
 
         mock -CommandName 'Write-Output' -MockWith {
@@ -47,21 +49,35 @@
 
     describe 'Start-ClusterTest' { 
 
+        ## Changing the output of Write-Output to 'describemock'
         mock -CommandName 'Write-Output' -MockWith {
-            'No you did not'
+            'describemock'
         }
 
         $result = Start-ClusterTest -Action 'Foo'
 
+        ## This passes because the mock above is in effect
+        it 'does the thing in the describe block' {
+            $result | should be 'describemock'
+        }
+
         context 'MockScope1' {
 
+            ## Override the previous mock. This only applies within this context block
             mock -CommandName 'Write-Output' -MockWith {
-                'Yes, I did!'
+                'mockscope1'
             }
 
+            $result = Start-ClusterTest -Action 'Foo'
 
-            it 'does the thing' {
-                $result | should be 'I did the thing Foo!' 
+            ## This will succeed because because the mock right above applies instead.
+            it 'does the thing in the mock scope 1 context' {
+                $result | should be 'mockscope1'
+            }
+
+            ## This will fail because we're not in that describe mock scope anymore
+            it 'does the thing in the mock scope 1 context' {
+                $result | should be 'describemock'
             }
 
         }
@@ -69,17 +85,28 @@
         context 'MockScope2' {
 
             mock -CommandName 'Write-Output' -MockWith {
-                'I did it again.'
+                'mockscope2'
             }
 
-            it 'does the thing' {
-                $result | should be 'I did the thing Foo!' 
+             $result = Start-ClusterTest -Action 'Foo'
+
+            ## Which will pass?
+            it 'does the thing in the mock scope 2 context' {
+                $result | should be 'describemock'
+            }
+
+            it 'does the thing in the mock scope 2 context' {
+                $result | should be 'mockscope1'
+            }
+
+            it 'does the thing in the mock scope 2 context' {
+                $result | should be 'mockscope2'
             }
 
         }
 
-        it 'does the thing' {
-            $result | should be 'I did the thing Foo!' 
+        it 'does the thing in the describe block' {
+            $result | should be 'describemock' 
         }
     }
 
@@ -118,7 +145,7 @@
     ## Need to run this without actually doing anything. This is a UNIT test.
     ## We need to ensure just to test this code we don't have to have an entire cluster setup.
 
-    ## Test v1
+    ## Test v1. We can't actually run the tests without screwing with our cluster.
     describe 'Start-ClusterTest' {
 
         $result = Start-ClusterTest -ClusterName 'DOESNOTMATTER'
@@ -141,7 +168,7 @@
 
         it 'does not murder poor, innocent, little puppies' {
 
-            ## How are we supposed to know what Write-Host was used? We can't!
+            ## How are we supposed to know that Write-Host was used? We can't!
         }
 
     }

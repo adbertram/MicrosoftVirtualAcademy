@@ -1,61 +1,22 @@
 $demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
 
-function Do-Thing {
-    Write-Output 'I did the thing'
-}
+## View the script and tests
+psedit "$demoPath\Introduction\DoStuff.ps1"
 
-function Get-Thing {
-    Write-Output 'I got the thing'
-}
+## Just a small test only testing one of the functions
+psedit "$demoPath\Introduction\DoStuff.Tests.ps1"
 
-function Set-Thing {
-    Write-Output 'I set the thing'
-}
+## Notice 33% coverage. Looks like we didn't execute Write-Output in two of the functions during testing.]
+Invoke-Pester -Path "$demoPath\Introduction\DoStuff.Tests.ps1" -CodeCoverage "$demoPath\Introduction\DoStuff.ps1"
 
-# DoStuff-GetThing.Tests.ps1
-#################
+psedit "$demoPath\Introduction\DoStuff-All.Tests.ps1"
 
-## Dot source the script
-. "$PSScriptRoot\DoStuff.ps1"
+## 100% test coverage but everything was NOT tested.
+Invoke-Pester -Path "$demoPath\Introduction\DoStuff-All.Tests.ps1" -CodeCoverage "$demoPath\Introduction\DoStuff.ps1"
 
-describe 'Get-Thing' {
-    it 'should return "I got the thing"' {
-        Get-Thing | should be 'I got the thing'
-    }
-}
-##################
-
-Invoke-Pester -Path "$demoPath\DoStuff-GetThing.Tests.ps1" -CodeCoverage "$demothPath\DoStuff.ps1"
-
-
-## DoStuff-All.Tests.ps1
-##################
-
-## Dot source the script
-. "$PSScriptRoot\DoStuff.ps1"
-describe 'Get-Thing' {
-    it 'should return "I got the thing"' {
-        Get-Thing | should be 'I got the thing'
-    }
-}
-
-describe 'Do-Thing' {
-    it 'should return "I did the thing"' {
-        Do-Thing ## Notice no should assertion here. Whoops!
-    }
-}
-
-describe 'Set-Thing' {
-    it 'should return "I set the thing"' {
-        Set-Thing ## Notice no should assertion here. Whoops!
-    }
-}
-##################
-
-Invoke-Pester "$demoPath\DoStuffAll.Tests.ps1" -CodeCoverage "$demoPath\DoStuff.ps1"
-
-## Scoping code coverage to a function
-Invoke-Pester "$demoPath\DoStuff-GetThing.Tests.ps1" -CodeCoverage @{ Path = "$demoPath\DoStuff.ps1"; Function = 'Get-Thing' }
+## Scoping code coverage to a function --Previously was only 33% coverage.
+Invoke-Pester "$demoPath\Introduction\DoStuff.Tests.ps1" -CodeCoverage @{ Path = "$demoPath\Introduction\DoStuff.ps1"; Function = 'Get-Thing' }
+Invoke-Pester "$demoPath\Introduction\DoStuff.Tests.ps1" -CodeCoverage @{ Path = "$demoPath\Introduction\DoStuff.ps1"; Function = 'Set-Thing' }
 
 ## Scoping code coverage to a line
-Invoke-Pester "$demoPath\DoStuff-GetThing.Tests.ps1" -CodeCoverage @{ Path = "$demoPath\DoStuff.ps1"; StartLine = 5; EndLine = 7 }
+Invoke-Pester "$demoPath\Introduction\DoStuff.Tests.ps1" -CodeCoverage @{ Path = "$demoPath\Introduction\DoStuff.ps1"; StartLine = 5; EndLine = 7 }

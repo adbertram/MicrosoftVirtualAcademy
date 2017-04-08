@@ -385,7 +385,7 @@ InModuleScope 'AdUserSync' {
             $Path -eq 'OU=Users,DC=mylab,DC=local' -and
             $Enabled -eq $true -and
             $ChangePasswordAtLogon -eq $true
-        } -Verifiable
+        }
 
         $params = @{
             Employee = [pscustomobject]@{

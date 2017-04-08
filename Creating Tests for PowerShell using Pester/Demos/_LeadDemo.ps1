@@ -5,10 +5,7 @@
 ##############################################
 ## Installing Pester
 ##############################################
-    ## Github
-    start 'https://github.com/pester/Pester'
 
-    ## PowerShell Gallery
     Find-Module -Name Pester
     Find-Module -Name Pester -RequiredVersion 3.4.6
     Install-Module -Name Pester -Force
@@ -49,6 +46,10 @@
 
             it 'an i should not be in team - like assertion' {
                 $stringToTest | should not belike '*i*'
+            }
+
+            it 'an i should not be in team - like assertion' {
+                $stringToTest | should belike '*i*'
             }
 
             it 'an i should not be in team - match assertion' {
@@ -155,6 +156,8 @@
     ## Look at the Before/After functionality
     psedit "$demoPath\Introduction\Test-FooV2.Tests.ps1"
 
+    Invoke-Pester -Path "$demoPath\Introduction\Test-FooV2.Tests.ps1"
+
 ##############################################
 ## Code Coverage
 ##############################################
@@ -174,10 +177,11 @@
     Invoke-Pester -Path "$demoPath\Introduction\Test-Foo.Tests.ps1"
 
     ## NUnit
-    Invoke-Pester "$demoPath\Introduction\Test-Foo.Tests.ps1" -OutputFormat NUnitXml -OutputFile "$demoPath\Test-Foo.TestResults.ps1"
+    Invoke-Pester "$demoPath\Introduction\Test-Foo.Tests.ps1" -OutputFormat NUnitXml -OutputFile "$demoPath\Test-Foo.TestResults.ps1" -Show None
+    Get-Content -Path "$demoPath\Test-Foo.TestResults.ps1"
 
-    ## Exit codes
-    Invoke-Pester -Path "$demoPath\Introduction\Test-FooFail.Tests.ps1" -EnableExit
+    ## Exit codes --must be done in the PowerShell console
+    powershell.exe -NonInteractive -NoProfile -Command { Invoke-Pester -Path "$demoPath\Introduction\FailingTest.Test.ps1" -EnableExit }
     $LASTEXITCODE
 
 ##############################################
@@ -334,12 +338,12 @@
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
 
     ## The tests that AppVeyor will kick off automatically after running the build.
-    psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.Tests.ps1"
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\New-TestEnvironment.Tests.ps1"
 
     ## The AppVeyor build script to tie everything together
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
 
-    ## Make a change to invoke the build. Build should pass
+    ## Is the build done yet?
 
     ## We'll just remove the AD groups by changing 'Present' to 'Absent'. Since tests are still configured to confirm
     ## those groups should be there, the build will fail.
@@ -352,16 +356,5 @@
     git push
     Pop-Location
 
-    ## Check AppVeyor to confirm
-    start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
-
-    ## Make a change to make tests pass and commit to Git
-    psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
-    Push-Location -Path 'C:\Dropbox\GitRepos\TestDomainCreator'
-    git add .
-    git commit --message 'MVA - Change to succeed test'
-    git push
-    Pop-Location
-
-    ## Check AppVeyor to confirm
+    ## Build will be automatically invoked. Check AppVeyor to confirm
     start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
