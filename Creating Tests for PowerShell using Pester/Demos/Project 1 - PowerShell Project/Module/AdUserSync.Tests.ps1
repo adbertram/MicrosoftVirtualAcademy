@@ -367,13 +367,11 @@ InModuleScope 'AdUserSync' {
         $securePass = (ConvertTo-SecureString -String 'foo' -AsPlainText -Force)
         $ptPass = DecryptSecureString -String $securePass
 
-        mock 'Get-ADUserDefaultPassword' {
+        mock 'Get-ADUserDefaultPassword' -Verifiable {
             $securePass
         }
 
-        mock 'New-AdUser'
-
-        mock 'New-Aduser' {
+        mock 'New-Aduser' -Verifiable {
 
         } -ParameterFilter {
             $UserPrincipalName -eq 'fLastNameHere' -and

@@ -16,6 +16,54 @@
     Get-Command -Module Pester
 
 ##############################################
+## The Basics
+##############################################
+
+    describe 'MVA Tests' {
+
+        context 'Arithmetic' {
+
+            it '1 plus 1 should be 2' {
+                1 + 1 | should be 2
+            }
+
+            it '3 minus 2 should 1' {
+                3 - 2 | should be 1
+            }
+        }
+
+        context 'String matching' {
+
+            it 'an i should not be in team - like assertion' {
+                'team' | should not belike '*i*'
+            }
+
+            it 'an i should not be in team - match assertion' {
+                'team' | should not match 'i'
+            }
+        }
+
+        context 'AAA approach' {
+
+            $stringToTest = 'team'
+
+            it 'an i should not be in team - like assertion' {
+                $stringToTest | should not belike '*i*'
+            }
+
+            it 'an i should not be in team - match assertion' {
+                $stringToTest | should not match 'i'
+            }
+        }
+    }
+
+    ## This can just be copied and pasted into the console for ad-hoc execution or...
+
+    ## Moved into a .Test.ps1 file and executed via Invoke-Pester
+    Add-Content -Path "$demoPath\MVATests.Tests.ps1" -Value ''
+    Invoke-Pester -Path "$demoPath\MVATests.Tests.ps1"
+
+##############################################
 ## Simple TDD Example
 ##############################################
     <# Define what we want to do
@@ -86,7 +134,7 @@
         }
     }
 
-    ## Great! One test passes. Let's make the next one pass
+    ## Run the tests. One test passes. Let's make the next one pass
 
     function Test-Foo {
         param(
@@ -108,13 +156,32 @@
     psedit "$demoPath\Introduction\Test-FooV2.Tests.ps1"
 
 ##############################################
+## Code Coverage
+##############################################
+
+    psedit "$demoPath\Introduction\CodeCoverage.ps1"
+
+##############################################
 ## Mocking
 ##############################################
 
     psedit "$demoPath\Introduction\Mocking.ps1"
 
 ##############################################
-## Project 1 - Writing Tests for a PowerShell Project
+## Pester Output
+##############################################
+
+    Invoke-Pester -Path "$demoPath\Introduction\Test-Foo.Tests.ps1"
+
+    ## NUnit
+    Invoke-Pester "$demoPath\Introduction\Test-Foo.Tests.ps1" -OutputFormat NUnitXml -OutputFile "$demoPath\Test-Foo.TestResults.ps1"
+
+    ## Exit codes
+    Invoke-Pester -Path "$demoPath\Introduction\Test-FooFail.Tests.ps1" -EnableExit
+    $LASTEXITCODE
+
+##############################################
+## Project 1 - Writing Tests for  PowerShell Tools
 ##############################################
 
     ## Run Pester tests to ensure this demo is at the right state
@@ -193,86 +260,86 @@
 ## Project 2 - Writing Tests for the PowerShell Gallery
 ##############################################
 
-start 'https://msdn.microsoft.com/en-us/powershell/gallery/psgallery/psgallery_faqs'
+    start 'https://msdn.microsoft.com/en-us/powershell/gallery/psgallery/psgallery_faqs'
 
-<#
-    - Must have a module manifest
-    - Must have certain keys in the manifest
-    - Must have Pester tests (recommended)
-    - Passes default PSScriptAnalyzer rules (recommended)
-#>
+    <#
+        - Must have a module manifest
+        - Must have certain keys in the manifest
+        - Must have Pester tests (recommended)
+        - Passes default PSScriptAnalyzer rules (recommended)
+    #>
 
-## My module I'd like to upload to the PowerShell Gallery
-psedit 'C:\Dropbox\GitRepos\PSWebDeploy\PSWebDeploy.psm1'
+    ## My module I'd like to upload to the PowerShell Gallery
+    psedit 'C:\Dropbox\GitRepos\PSWebDeploy\PSWebDeploy.psm1'
 
-describe 'PowerShell Gallery Tests' {
+    describe 'PowerShell Gallery Tests' {
 
-    $moduleFolder = 'C:\Dropbox\GitRepos\PSWebDeploy'
-    $moduleManifestPath = "$moduleFolder\PSWebDeploy.psd1"
-    $manifest = Import-PowerShellDataFile -Path $moduleManifestPath -ErrorAction Ignore
+        $moduleFolder = 'C:\Dropbox\GitRepos\PSWebDeploy'
+        $moduleManifestPath = "$moduleFolder\PSWebDeploy.psd1"
+        $manifest = Import-PowerShellDataFile -Path $moduleManifestPath -ErrorAction Ignore
 
-    it 'must have a module manifest with the same name as the module' {
-        $moduleManifestPath | should exist
+        it 'must have a module manifest with the same name as the module' {
+            $moduleManifestPath | should exist
+        }
+
+        it 'must have the Description manifest key populated' {
+            $manifest.Description | should not benullorempty
+        }
+
+        it 'must have the Author manifest key populated' {
+            $manifest.Author | should not benullorempty
+        }
+
+        it 'must have either the LicenseUri or ProjectUri manifest key populated' {
+            ($manifest.PrivateData.PSData.LicenseUri + $manifest.PrivateData.PSData.ProjectUri) | should not benullorempty
+        }
+
+        it 'must pass Test-ModuleManifest validation' {
+            Test-ModuleManifest -Path $moduleManifestPath -ErrorAction SilentlyContinue | should be $true
+        }
+
+        it 'must have associated Pester tests' {
+            "$moduleFolder\PSWebDeploy.Tests.ps1" | should exist
+        }
+
+        it 'must pass PSScriptAnalyzer rules' {
+            Invoke-ScriptAnalyzer -Path "$moduleFolder\PSWebDeploy.psm1" -ExcludeRule 'PSUseDeclaredVarsMoreThanAssignments' | should benullorempty
+        }
     }
-
-    it 'must have the Description manifest key populated' {
-        $manifest.Description | should not benullorempty
-    }
-
-    it 'must have the Author manifest key populated' {
-        $manifest.Author | should not benullorempty
-    }
-
-    it 'must have either the LicenseUri or ProjectUri manifest key populated' {
-        ($manifest.PrivateData.PSData.LicenseUri + $manifest.PrivateData.PSData.ProjectUri) | should not benullorempty
-    }
-
-    it 'must pass Test-ModuleManifest validation' {
-        Test-ModuleManifest -Path $moduleManifestPath -ErrorAction SilentlyContinue | should be $true
-    }
-
-    it 'must have associated Pester tests' {
-        Test-Path -Path "$moduleFolder\PSWebDeploy.Tests.ps1" | should be $true
-    }
-
-    it 'must pass PSScriptAnalyzer rules' {
-        Invoke-ScriptAnalyzer -Path "$moduleFolder\PSWebDeploy.psm1" -ExcludeRule 'PSUseDeclaredVarsMoreThanAssignments' | should benullorempty
-    }
-}
 
 
 ##############################################
-## Project 3 - Automating DSC Configuration Tests (Infrastructure Testing)
+## Project 3 - Test Automation with DSC and Build Pipelines
 ##############################################
 
-<# Steps
-    - Write DSC configuration
-    - Check in DSC code to Github
-    - AppVeyor build automatically kicks off with current code
-      - DSC configuration is applied to an existing Azure VM
-    - AppVeyor kicks off Pester tests to ensure DSC configuration did as expected
-    - AppVeyor uploads results to nUnit capable view
-    - We bask in the glory of passed tests (hopefully)
-#>
+    <# Steps
+        - Write DSC configuration
+        - Check in DSC code to Github
+        - AppVeyor build automatically kicks off with current code
+        - DSC configuration is applied to an existing Azure VM
+        - AppVeyor kicks off Pester tests to ensure DSC configuration did as expected
+        - AppVeyor uploads results to nUnit capable view
+        - We bask in the glory of passed tests (hopefully)
+    #>
 
-## The TestDomainCreator Project
-start 'https://github.com/adbertram/TestDomainCreator'
+    ## The TestDomainCreator Project
+    start 'https://github.com/adbertram/TestDomainCreator'
 
-## AppVeyor
-start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
+    ## AppVeyor
+    start 'https://ci.appveyor.com/project/adbertram/testdomaincreator'
 
-## Kick off the AppVeyor build --we'll come back to that.
+    ## Kick off the AppVeyor build --we'll come back to that.
 
-## The DSC Configuration that AppVeyor will apply to our Azure VM
-psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
+    ## The DSC Configuration that AppVeyor will apply to our Azure VM
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
 
-## The tests that AppVeyor will kick off automatically after running the build.
-psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.Tests.ps1"
+    ## The tests that AppVeyor will kick off automatically after running the build.
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.Tests.ps1"
 
-## The AppVeyor build script to tie everything together
-psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
+    ## The AppVeyor build script to tie everything together
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
 
-## Make a change to invoke the build. Build should pass
+    ## Make a change to invoke the build. Build should pass
 
     ## We'll just remove the AD groups by changing 'Present' to 'Absent'. Since tests are still configured to confirm
     ## those groups should be there, the build will fail.

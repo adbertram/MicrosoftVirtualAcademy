@@ -35,6 +35,55 @@
     }
 
 #########################
+## Mocking and scopes
+#########################
+
+    function Start-ClusterTest {
+        param($Action)
+
+        Write-Host 'Doing the thing...'
+        Write-Output "I did the thing $Action!"
+    }
+
+    describe 'Start-ClusterTest' { 
+
+        mock -CommandName 'Write-Output' -MockWith {
+            'No you did not'
+        }
+
+        $result = Start-ClusterTest -Action 'Foo'
+
+        context 'MockScope1' {
+
+            mock -CommandName 'Write-Output' -MockWith {
+                'Yes, I did!'
+            }
+
+
+            it 'does the thing' {
+                $result | should be 'I did the thing Foo!' 
+            }
+
+        }
+
+        context 'MockScope2' {
+
+            mock -CommandName 'Write-Output' -MockWith {
+                'I did it again.'
+            }
+
+            it 'does the thing' {
+                $result | should be 'I did the thing Foo!' 
+            }
+
+        }
+
+        it 'does the thing' {
+            $result | should be 'I did the thing Foo!' 
+        }
+    }
+
+#########################
 ## Mocking 101
 #########################
 
