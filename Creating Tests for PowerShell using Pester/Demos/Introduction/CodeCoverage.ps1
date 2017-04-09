@@ -6,6 +6,8 @@ psedit "$demoPath\Introduction\DoStuff.ps1"
 ## Just a small test only testing one of the functions
 psedit "$demoPath\Introduction\DoStuff.Tests.ps1"
 
+Invoke-Pester -Path "$demoPath\Introduction\DoStuff.Tests.ps1"
+
 ## Notice 33% coverage. Looks like we didn't execute Write-Output in two of the functions during testing.]
 Invoke-Pester -Path "$demoPath\Introduction\DoStuff.Tests.ps1" -CodeCoverage "$demoPath\Introduction\DoStuff.ps1"
 

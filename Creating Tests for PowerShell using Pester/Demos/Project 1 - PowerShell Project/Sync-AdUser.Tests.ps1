@@ -143,7 +143,6 @@ describe 'Sync-AdUser - Failure Tests' {
     }
 }
 
-
 describe 'Sync-AdUser - user account creation' {
 
     mock 'Get-ActiveEmployee' {
@@ -262,7 +261,7 @@ describe 'Sync-AdUser - group member tests' {
     ## This is what we're testing around now
     mock 'Add-ADGroupMember'
 
-    ## Don't forget to mock functions that are in the parameters! Pester will still invoke these even if yu mock the 
+    ## Don't forget to mock functions that are in the parameters! Pester will still invoke these even if you mock the 
     ## "parent" function
     mock 'Get-AdUserDefaultPassword' {
         (ConvertTo-SecureString -String 'foo' -AsPlainText -Force)

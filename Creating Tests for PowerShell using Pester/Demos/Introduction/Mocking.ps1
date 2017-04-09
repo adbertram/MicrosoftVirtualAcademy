@@ -3,10 +3,10 @@
 #########################
 
     function Start-ClusterTest {
-        param($Action)
+        param($ClusterName)
 
         Write-Host 'Doing the thing...'
-        Write-Output "I did the thing $Action!"
+        Write-Output "I did the thing against $ClusterName!"
     }
 
     ## Test with no mocking
@@ -33,7 +33,6 @@
         it 'does the thing' {
            $result | should be 'I did the thing Foo!' 
         }
-        
     }
 
 #########################
@@ -41,10 +40,10 @@
 #########################
 
     function Start-ClusterTest {
-        param($Action)
+        param($ClusterName)
 
         Write-Host 'Doing the thing...'
-        Write-Output "I did the thing $Action!"
+        Write-Output "I did the thing against $ClusterName!"
     }
 
     describe 'Start-ClusterTest' { 
@@ -88,7 +87,7 @@
                 'mockscope2'
             }
 
-             $result = Start-ClusterTest -Action 'Foo'
+            $result = Start-ClusterTest -Action 'Foo'
 
             ## Which will pass?
             it 'does the thing in the mock scope 2 context' {
@@ -111,7 +110,7 @@
     }
 
 #########################
-## Mocking 101
+## Mocking 101-301
 #########################
 
     ## Helper function to Start-ClusterTest
@@ -152,7 +151,7 @@
 
         it 'tests the correct cluster' {
             ## Unit tests just ensure code paths are followed. Without mocks there's no way to determine what parameters
-            ## are passed to Set-Thing
+            ## are passed to Test-ClusterProblem
         }
 
         it 'when no problems are detected, it should return $true' {
@@ -224,7 +223,7 @@
 
             $result = Start-ClusterTest -ClusterName 'DOESNOTMATTER'
 
-            it 'restarts the cluster' {
+            it 'attempts to restart the cluster' {
                 
                 $assMParams = @{
                     CommandName = 'Restart-Cluster'
@@ -248,5 +247,132 @@
             it 'should return $true' {
                 $result | should be $true
             }
+        }
+    }
+
+#########################
+## Mocking with modules
+#########################
+
+    ## Ensure no functions were just copied/pasted into session
+    Remove-Item Function:\Start-ClusterTest,Function:\Restart-Cluster,Function:\Test-ClusterProblem
+
+    ## Import the ClusterTest module into the session
+    Import-Module "$demoPath\Introduction\ClusterTest\ClusterTest.psd1"
+
+    ## Notice only a single function is exported
+    Get-Command -Module ClusterTest
+
+    ## One test from the Start-ClusterTest describe block above.
+    ## Not all of the functions that are referenced inside of Start-ClusterTest are exported.
+
+    ## FAIL!
+    describe 'Start-ClusterTest' {
+
+        ## Create mocks to simply let the function execute and essentially do nothing
+        mock 'Write-Host'
+
+        mock 'Test-ClusterProblem' {
+            $true
+        }
+
+        mock 'Restart-Cluster' ## Null
+
+        it 'tests the correct cluster' {
+
+            $assMParams = @{
+                CommandName = 'Test-ClusterProblem'
+                Times = 1
+                Exactly = $true
+                ParameterFilter = {
+                    $ClusterName -eq 'DOESNOTMATTER'
+                }
+            }
+            Assert-MockCalled @assMParams
+
+        }
+    }
+
+    ## Mocks must be able to access functions to work. Use InModuleScope
+
+    InModuleScope 'ClusterTest' {
+        describe 'Start-ClusterTest' {
+
+            ## Create mocks to simply let the function execute and essentially do nothing
+            mock 'Write-Host'
+
+            mock 'Test-ClusterProblem' {
+                $true
+            }
+
+            mock 'Restart-Cluster'
+
+            $result = Start-ClusterTest -ClusterName 'DOESNOTMATTER'
+
+            it 'tests the correct cluster' {
+
+                $assMParams = @{
+                    CommandName = 'Test-ClusterProblem'
+                    Times = 1
+                    Exactly = $true
+                    ParameterFilter = {
+                        $ClusterName -eq 'DOESNOTMATTER'
+                    }
+                }
+                Assert-MockCalled @assMParams
+
+            }
+        }
+    }
+
+#########################
+## New-MockObject
+#########################
+
+    ## Function to test
+    function Remove-WindowsService {
+        param(
+            [Parameter()]
+            [ValidateNotNullOrEmpty()]
+            [System.ServiceProcess.ServiceController]$Service ## A strongly typed parameter
+        )
+
+        ## Use the $Service paramter in here in some way
+    }
+
+    ## This isn't testable without actually getting a real service.
+    describe 'Remove-WindowsService' {
+
+        ## This is a no-no. Do not depend on the environment to run unit tests.
+        $realService = Get-Service -Name 'wuauserv'
+
+        $result = Remove-WindowsService -Service $realService
+
+        it 'does something it is supposed to' {
+            $true | should be $true
+        }
+    }
+
+    ## Figure out the object type you need and create a "fake" one that has that type just to make the function execute
+    ## System.ServiceProcess.ServiceController
+
+    $mockService = New-MockObject -Type 'System.ServiceProcess.ServiceController'
+
+    ## "Blank" object
+    $mockService
+
+    ## ..but is the right type. Exactly what we need to pass to our function
+    $mockService | Get-Member
+
+    ## This isn't testable without actually getting a real service.
+    describe 'Remove-WindowsService' {
+
+        ## This is a no-no. Do not depend on the environment to run unit tests.
+        $mockService = New-MockObject -Type 'System.ServiceProcess.ServiceController'
+
+        $result = Remove-WindowsService -Service $mockService
+
+        it 'does something it is supposed to' {
+            $true | should be $true
         }
     }

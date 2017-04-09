@@ -8,7 +8,7 @@ populated in Active Directory. They have an initial set of requirements.
 
 This script:
 
- - Attempts to find a corresponding AD account based on the FirstName/LastName of a CSV throw
+ - Attempts to find a corresponding AD account based on the FirstName/LastName of a CSV
  - If found, it skips. If not, it creates a user based on attribute in that CSV row
  - It adds the user account to a departmental group
  - It also disables any user NOT in the CSV

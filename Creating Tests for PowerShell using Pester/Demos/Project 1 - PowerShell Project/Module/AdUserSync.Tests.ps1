@@ -9,6 +9,9 @@ Import-Module "$PSScriptRoot\AdUserSync.psm1" -Force
 InModuleScope 'AdUserSync' {
     describe 'Get-AdUserDefaultPassword' {
 
+        #############
+        ## HIGHLIGHT
+        #############
         ## Must mock this to control what gets passed to ConvertTo-SecureString and we're asserting this command was called.
         mock 'Import-CliXml' {
             $testCred = New-MockObject -Type 'System.Management.Automation.PSCredential'
@@ -26,6 +29,9 @@ InModuleScope 'AdUserSync' {
 
         it 'builds the default FilePath parameter correctly and passes it to Import-CliXml' {
 
+            #############
+            ## HIGHLIGHT
+            #############
             ## Assign to $null. I'm just asserting a command was called. I don't care what it returns.
             $null = Get-AdUserDefaultPassword
 
@@ -49,13 +55,20 @@ InModuleScope 'AdUserSync' {
             ## ConvertTo-SecureString -String 'foo' -AsPlainText -Force | Get-Member
 
             $result.Count | should be 1
+
+            #############
+            ## HIGHLIGHT
+            #############
             $result | should beofType 'System.Security.SecureString'
         }
 
+        #############
+        ## HIGHLIGHT
+        #############
         it 'converts the expected password to a secure string' {
 
             ## This It block is last on purpose because I'm creating a mock that I don't want applied to the It
-            ## blocks above.        
+            ## blocks above.     
 
             mock 'ConvertTo-SecureString'
 
@@ -75,6 +88,9 @@ InModuleScope 'AdUserSync' {
 
     describe 'Get-ActiveEmployee' {
 
+        #############
+        ## HIGHLIGHT
+        #############
         ## "Fake"" CSV data just to test with based on the real data
         mock 'Import-Csv' {
             ConvertFrom-Csv -InputObject @'
@@ -98,6 +114,9 @@ InModuleScope 'AdUserSync' {
 
         }
 
+        #############
+        ## HIGHLIGHT
+        #############
         it 'returns objects that have an ADuserName property appended' {
             
             ## I've chosen not to mock the function (Get-EmployeeUserName) creates the ADUserName property. I do this because
@@ -115,6 +134,9 @@ InModuleScope 'AdUserSync' {
 
         }
 
+        #############
+        ## HIGHLIGHT
+        #############
         it 'throws an exception when the CSV file cannot be found' {
             
             mock 'Test-Path' {
@@ -151,6 +173,9 @@ InModuleScope 'AdUserSync' {
 
     describe 'Get-InactiveEmployee' {
 
+        #############
+        ## HIGHLIGHT
+        #############
         mock 'Get-ActiveEmployee' {
             ## Must create something with ADUserName since we're referencing that property in the function.
             [pscustomobject]@{
@@ -166,6 +191,9 @@ InModuleScope 'AdUserSync' {
 
         it 'should only query for AD users that are enabled' {
 
+            #############
+            ## HIGHLIGHT
+            #############
             ## This will only create the mock if the parameter filter is $true
             mock 'Get-AdUser' {
 
@@ -359,6 +387,9 @@ InModuleScope 'AdUserSync' {
 
     describe 'New-CompanyAdUser' {
 
+        #############
+        ## HIGHLIGHT
+        #############
         function DecryptSecureString {
             param($String)
             [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($String))
@@ -367,6 +398,9 @@ InModuleScope 'AdUserSync' {
         $securePass = (ConvertTo-SecureString -String 'foo' -AsPlainText -Force)
         $ptPass = DecryptSecureString -String $securePass
 
+        #############
+        ## HIGHLIGHT
+        #############
         mock 'Get-ADUserDefaultPassword' -Verifiable {
             $securePass
         }

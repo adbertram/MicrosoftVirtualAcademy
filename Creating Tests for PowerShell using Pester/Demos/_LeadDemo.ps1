@@ -3,18 +3,19 @@
     $demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
 
 ##############################################
-## Installing Pester
+## The Basics
 ##############################################
 
     Find-Module -Name Pester
-    Find-Module -Name Pester -RequiredVersion 3.4.6
     Install-Module -Name Pester -Force
 
     Get-Command -Module Pester
 
-##############################################
-## The Basics
-##############################################
+    describe 'MVA Tests' {
+        it '$true should be $true' {
+            $true | should be $true
+        }
+    }
 
     describe 'MVA Tests' {
 
@@ -57,12 +58,10 @@
             }
         }
     }
-
     ## This can just be copied and pasted into the console for ad-hoc execution or...
 
     ## Moved into a .Test.ps1 file and executed via Invoke-Pester
-    Add-Content -Path "$demoPath\MVATests.Tests.ps1" -Value ''
-    Invoke-Pester -Path "$demoPath\MVATests.Tests.ps1"
+    Invoke-Pester -Path "$demoPath\Introduction\MVATests.Tests.ps1"
 
 ##############################################
 ## Simple TDD Example
@@ -88,7 +87,7 @@
     ## A describe block with the same name as the function itself (recommended)
     describe 'Test-Foo' {
 
-        # Arrange/Act step
+        # Arrange
             ## Since working with files, we'll use the builtin Pester feature TestDrive.
             ## Create a file that we know for sure has 'foo' in it
             Add-Content -Path TestDrive:\foofile.txt -Value 'foo'
@@ -96,29 +95,31 @@
             ## Create a file that we know for sure does not have 'foo' in it
             Add-Content -Path TestDrive:\nofoofile.txt -Value 'not here'
 
+
+        ## Act
             $fooutput = Test-Foo -FilePath TestDrive:\foofile.txt
             $nofooutput = Test-Foo -FilePath TestDrive:\nofoofile.txt
 
         ## The actual tests (it blocks) inside of the describe block. recommended to use a standard naming convention
         ## when X, it should Y. This is the "Assert" phase.
 
-        it 'when the file has "foo" in it, it should return $true' {
+        ## Assert
+            it 'when the file has "foo" in it, it should return $true' {
 
-            ## Should "asserts" what the function should return
-            ## https://github.com/pester/Pester/wiki/Should
-           
-            $fooutput | should be $true
-            $fooutput | should beoftype 'bool'
-            @($fooutput).Count | should be 1
+                ## Should "asserts" what the function should return
+            
+                $fooutput | should be $true
+                $fooutput | should beoftype 'bool'
+                @($fooutput).Count | should be 1
 
-        }
+            }
 
-        it 'when the file does not have "foo" in it, it should return $false' {
+            it 'when the file does not have "foo" in it, it should return $false' {
 
-            ## Should "asserts" what the function should return
-            $nofooutput | should be $false
+                ## Should "asserts" what the function should return
+                $nofooutput | should be $false
 
-        }
+            }
     }
 
     ## Run the tests --failed. Why?
@@ -190,15 +191,15 @@
 
     ## Run Pester tests to ensure this demo is at the right state
     & "$demoPath\Project 1 - PowerShell Project\PrepTests.ps1"
-    ## & "$demoPath\PrepDemo.ps1"
+    ## "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
 
     ## Introduce the problem and the script we start with. This script works I suppose but it's impossible to write unit tests against.
     psedit "$demoPath\Project 1 - PowerShell Project\Sync-AdUser-needswork.ps1"
     & "$demoPath\Project 1 - PowerShell Project\Sync-AdUser-needswork.ps1" -Verbose
 
     ## Clean up AD --demo stuff
-    & "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
     & "$demoPath\Project 1 - PowerShell Project\PrepTests.ps1"
+    & "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
 
     ##############################################
     ## Step #1: Readying code for testing
@@ -348,6 +349,8 @@
     ## We'll just remove the AD groups by changing 'Present' to 'Absent'. Since tests are still configured to confirm
     ## those groups should be there, the build will fail.
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
+
+    psedit "C:\Dropbox\GitRepos\TestDomainCreator\ConfigurationData.psd1"
 
     ## Commit the change and sync to Github
     Push-Location -Path 'C:\Dropbox\GitRepos\TestDomainCreator'
