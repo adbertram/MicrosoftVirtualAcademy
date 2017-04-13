@@ -9,9 +9,6 @@ Import-Module "$PSScriptRoot\AdUserSync.psm1" -Force
 InModuleScope 'AdUserSync' {
     describe 'Get-AdUserDefaultPassword' {
 
-        #############
-        ## HIGHLIGHT
-        #############
         ## Must mock this to control what gets passed to ConvertTo-SecureString and we're asserting this command was called.
         mock 'Import-CliXml' {
             $testCred = New-MockObject -Type 'System.Management.Automation.PSCredential'
@@ -191,9 +188,6 @@ InModuleScope 'AdUserSync' {
 
         it 'should only query for AD users that are enabled' {
 
-            #############
-            ## HIGHLIGHT
-            #############
             ## This will only create the mock if the parameter filter is $true
             mock 'Get-AdUser' {
 
