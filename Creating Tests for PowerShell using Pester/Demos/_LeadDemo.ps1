@@ -172,20 +172,6 @@
     psedit "$demoPath\Introduction\Mocking.ps1"
 
 ##############################################
-## Pester Output
-##############################################
-
-    Invoke-Pester -Path "$demoPath\Introduction\Test-Foo.Tests.ps1"
-
-    ## NUnit
-    Invoke-Pester "$demoPath\Introduction\Test-Foo.Tests.ps1" -OutputFormat NUnitXml -OutputFile "$demoPath\Test-Foo.TestResults.ps1" -Show None
-    Get-Content -Path "$demoPath\Test-Foo.TestResults.ps1"
-
-    ## Exit codes --must be done in the PowerShell console
-    powershell.exe -NonInteractive -NoProfile -Command { Invoke-Pester -Path "$demoPath\Introduction\FailingTest.Test.ps1" -EnableExit }
-    $LASTEXITCODE
-
-##############################################
 ## Project 1 - Writing Tests for  PowerShell Tools
 ##############################################
 
@@ -343,6 +329,11 @@
 
     ## The AppVeyor build script to tie everything together
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
+
+    ##############################################
+    ## CALLOUT - Pester Output
+    psedit "$demopath\Callouts\PesterOutput.ps1"
+    ##############################################
 
     ## Is the build done yet?
 
