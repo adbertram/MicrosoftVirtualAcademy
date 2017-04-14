@@ -34,7 +34,7 @@ describe 'NewMockObject demo' {
 			Times = 1
 			Exactly = $true
 			Scope = 'It'
-			ParameterFilter = {$Credential.GetNetworkCredential().Password -eq 'food' }
+			ParameterFilter = {$Credential.GetNetworkCredential().Password -eq 'foo' }
 		}
 		Assert-MockCalled @assMParams
 	}

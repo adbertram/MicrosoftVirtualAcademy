@@ -1,10 +1,10 @@
-$demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
+$demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Testing PowerShell with Pester\Demos'
 
 ## Ensure no functions were just copied/pasted into session
 Remove-Item Function:\Start-ClusterTest,Function:\Restart-Cluster,Function:\Test-ClusterProblem -ErrorAction Ignore
 
 ## Import the ClusterTest module into the session
-Import-Module "$demoPath\Introduction\ClusterTest\ClusterTest.psd1"
+Import-Module "$demoPath\Introduction\Project 1 - PowerShell Project\ClusterTest.psd1"
 
 ## Notice only a single function is exported
 Get-Command -Module ClusterTest

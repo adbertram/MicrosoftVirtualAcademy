@@ -1,6 +1,6 @@
 ## Demo stuff
     return
-    $demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
+    $demoPath = 'C:\Dropbox\GitRepos\MicrosoftVirtualAcademy\Testing PowerShell with Pester\Demos'
 
 ##############################################
 ## The Basics
@@ -50,7 +50,7 @@
             }
 
             it 'an i should not be in team - like assertion' {
-                $stringToTest | should belike '*i*'
+                $stringToTest | should not belike '*i*'
             }
 
             it 'an i should not be in team - match assertion' {
@@ -77,6 +77,16 @@
         $false.
     #>
 
+    ########################
+    ## CALLOUT: TestDrive
+    ########################
+    psedit "$demoPath\Callouts\TestDrive.ps1"
+
+    ########################
+    ## CALLOUT: BeforeAll/AfterAll/BeforeEach/AfterEach
+    ########################
+    psedit "$demoPath\Callouts\BeforeAll.ps1"
+
     ## Ensure the function is available in the session
     function Test-Foo {
         param(
@@ -88,13 +98,14 @@
     describe 'Test-Foo' {
 
         # Arrange
+        BeforeAll {
             ## Since working with files, we'll use the builtin Pester feature TestDrive.
             ## Create a file that we know for sure has 'foo' in it
             Add-Content -Path TestDrive:\foofile.txt -Value 'foo'
 
             ## Create a file that we know for sure does not have 'foo' in it
             Add-Content -Path TestDrive:\nofoofile.txt -Value 'not here'
-
+        }
 
         ## Act
             $fooutput = Test-Foo -FilePath TestDrive:\foofile.txt
@@ -154,11 +165,6 @@
     psedit "$demoPath\Introduction\Test-Foo.Tests.ps1"
     Invoke-Pester -Path "$demoPath\Introduction\Test-Foo.Tests.ps1"
 
-    ## Look at the Before/After functionality
-    psedit "$demoPath\Introduction\Test-FooV2.Tests.ps1"
-
-    Invoke-Pester -Path "$demoPath\Introduction\Test-FooV2.Tests.ps1"
-
 ##############################################
 ## Code Coverage
 ##############################################
@@ -175,17 +181,8 @@
 ## Project 1 - Writing Tests for  PowerShell Tools
 ##############################################
 
-    ## Run Pester tests to ensure this demo is at the right state
-    & "$demoPath\Project 1 - PowerShell Project\PrepTests.ps1"
-    ## "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
-
     ## Introduce the problem and the script we start with. This script works I suppose but it's impossible to write unit tests against.
     psedit "$demoPath\Project 1 - PowerShell Project\Sync-AdUser-needswork.ps1"
-    & "$demoPath\Project 1 - PowerShell Project\Sync-AdUser-needswork.ps1" -Verbose
-
-    ## Clean up AD --demo stuff
-    & "$demoPath\Project 1 - PowerShell Project\PrepTests.ps1"
-    & "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
 
     ##############################################
     ## Step #1: Readying code for testing
@@ -229,23 +226,25 @@
         ## 1. Build a test 'framework' for all module functions (helpers)
         psedit "$demoPath\Project 1 - PowerShell Project\TestFramework.ps1"
 
+        #############
+        ## CALLOUT - NewMockobject
+        #############
+        psedit "$demoPath\Callouts\NewMockObject.ps1"
+
+        ################
+        ## CALLOUT: Testing Exceptions
+        ###############
+        psedit "$demoPath\Callouts\TestingExceptions.ps1"
+
         ## 2. Build tests for our "helper" functions in the module
         psedit "$demoPath\Project 1 - PowerShell Project\Module\AdUserSync.Tests.ps1"
 
         ## 3. Build tests for how these functions are invoked in the script
         psedit "$demoPath\Project 1 - PowerShell Project\Sync-AdUser.Tests.ps1"
 
-
     ##############################################
     ## Project Completed
     ##############################################
-
-    ## Remove all of the stuff we did to the environment to prove a point
-     & "$demoPath\Project 1 - PowerShell Project\PrepDemo.ps1"
-
-    ## Run tests
-    Invoke-Pester -Path "$demoPath\Project 1 - PowerShell Project\Module\AdUserSync.Tests.ps1"
-    Invoke-Pester -Path "$demoPath\Project 1 - PowerShell Project\Sync-AdUser.Tests.ps1"
 
 ##############################################
 ## Project 2 - Writing Tests for the PowerShell Gallery
@@ -324,16 +323,16 @@
     ## The DSC Configuration that AppVeyor will apply to our Azure VM
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\NewTestEnvironment.ps1"
 
+    ########################
+    ## CALLOUT - Pester Output
+    ########################
+    psedit "$demoPath\Callouts\PesterOutput.ps1"
+
     ## The tests that AppVeyor will kick off automatically after running the build.
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\New-TestEnvironment.Tests.ps1"
 
     ## The AppVeyor build script to tie everything together
     psedit "C:\Dropbox\GitRepos\TestDomainCreator\buildscripts\build.ps1"
-
-    ##############################################
-    ## CALLOUT - Pester Output
-    psedit "$demopath\Callouts\PesterOutput.ps1"
-    ##############################################
 
     ## Is the build done yet?
 

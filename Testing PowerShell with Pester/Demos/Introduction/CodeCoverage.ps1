@@ -1,4 +1,4 @@
-$demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Creating Tests for PowerShell using Pester\Demos'
+$demoPath = 'C:\Dropbox\GitRepos\MIcrosoftVIrtualAcademy\Testing PowerShell with Pester\Demos'
 
 ## View the script and tests
 psedit "$demoPath\Introduction\DoStuff.ps1"

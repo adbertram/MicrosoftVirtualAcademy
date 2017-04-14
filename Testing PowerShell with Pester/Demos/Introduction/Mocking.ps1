@@ -12,11 +12,11 @@
     ## Test with no mocking
     describe 'Start-ClusterTest' { 
 
-        $result = Start-ClusterTest -Action 'Foo'
+        $result = Start-ClusterTest -ClusterName 'SERVER1'
         
-        it 'returns a string with $Action inside' {
-            ## I know the input and the output together. It's Foo
-            $result | should be 'I did the thing Foo!' 
+        it 'returns a string with $ClusterName inside' {
+            ## I know the input and the output together. It's SERVER1
+            $result | should be 'I did the thing against SERVER1!' 
         }
         
     }
@@ -28,10 +28,10 @@
             'No you did not'
         }
 
-        $result = Start-ClusterTest -Action 'Foo'
+        $result = Start-ClusterTest -ClusterName 'SERVER1'
         
         it 'does the thing' {
-           $result | should be 'I did the thing Foo!' 
+           $result | should be "I did the thing against $ClusterName!"
         }
     }
 
@@ -53,7 +53,15 @@
             'describemock'
         }
 
-        $result = Start-ClusterTest -Action 'Foo'
+        mock -CommandName 'Write-Output' -MockWith {
+            'describemock1'
+        }
+
+        mock -CommandName 'Write-Output' -MockWith {
+            'describemock-lastone'
+        }
+
+        $result = Start-ClusterTest -ClusterName 'SERVER1'
 
         ## This passes because the mock above is in effect
         it 'does the thing in the describe block' {
@@ -67,7 +75,7 @@
                 'mockscope1'
             }
 
-            $result = Start-ClusterTest -Action 'Foo'
+            $result = Start-ClusterTest -ClusterName 'SERVER1'
 
             ## This will succeed because because the mock right above applies instead.
             it 'does the thing in the mock scope 1 context' {
@@ -87,7 +95,7 @@
                 'mockscope2'
             }
 
-            $result = Start-ClusterTest -Action 'Foo'
+            $result = Start-ClusterTest -ClusterName 'SERVER1'
 
             ## Which will pass?
             it 'does the thing in the mock scope 2 context' {
@@ -110,7 +118,7 @@
     }
 
 #########################
-## Mocking 101-301
+## Mocking 301
 #########################
 
     ## Helper function to Start-ClusterTest
@@ -122,7 +130,7 @@
     
     ## Helper function to Start-ClusterTest
     function Test-ClusterProblem {
-        param($ClusterName)n
+        param($ClusterName)
 
         ## Check some stuff here. Return either $true if all checks passed
         ## or false if they did not. For now, we'll just return $true.
@@ -132,7 +140,7 @@
     function Start-ClusterTest {
         param($ClusterName)
 
-        Write-Host 'Starting cluster test...'
+        #Write-Host 'Starting cluster test...'
         $result = Test-ClusterProblem -ClusterName $ClusterName ## Run another function
         if ($result) {
             $true
@@ -248,4 +256,4 @@
                 $result | should be $true
             }
         }
-    }x
+    }

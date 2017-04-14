@@ -13,12 +13,12 @@ describe 'Fake Data Demo' {
 
 	mock 'Import-Csv' {
             ConvertFrom-Csv -InputObject @'
-    "FirstName","LastName","Department","Title"
-    "Katie","Green","Accounting","Manager of Accounting"
-    "Joe","Blow", "Information Systems","System Administrator"
-    "Joe","Schmoe", "Information Systems", "Software Developer"
-    "Barack","Obama", "Executive Office", "CEO"
-    "Donald","Trump", "Janitorial Services", "Custodian"
+	"FirstName","LastName","Department","Title"
+	"Katie","Green","Accounting","Manager of Accounting"
+	"Joe","Johnson", "Information Systems","System Administrator"
+	"Joe","Baker", "Information Systems", "Software Developer"
+	"Missy","Smith", "Executive Office", "CEO"
+	"Ronald","Jones", "Janitorial Services", "Custodian"
 '@
 	}
 
